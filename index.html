@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE HOOY BEAST</title>
+    <script src="https://unpkg.com/fabric@5.3.0/dist/fabric.min.js"></script>
+    <style>
+        :root { --neon: #00f2ff; --premium: #ffd700; --dark: #050505; }
+        body { margin: 0; background: var(--dark); color: white; font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        header { padding: 15px 20px; background: rgba(0,0,0,0.9); border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 900; color: var(--neon); text-shadow: 0 0 10px var(--neon); font-size: 18px; }
+        .badge { background: var(--premium); color: #000; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+        .beast-tools { background: #111; display: flex; overflow-x: auto; padding: 12px; gap: 15px; border-bottom: 1px solid #222; }
+        .t-btn { min-width: 65px; text-align: center; color: #eee; font-size: 10px; cursor: pointer; transition: 0.3s; }
+        .t-btn span { display: block; font-size: 22px; margin-bottom: 4px; }
+        .canvas-viewport { flex: 1; display: flex; align-items: center; justify-content: center; background: radial-gradient(#1a1a1a, #000); overflow: hidden; position: relative; }
+        .canvas-wrap { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .export-btn { background: linear-gradient(45deg, var(--neon), #0066ff); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">THE HOOY <span class="badge">ULTIMATE 4K</span></div>
+        <button class="export-btn" onclick="export4K()">EXPORT 4K</button>
+    </header>
+
+    <div class="beast-tools">
+        <label class="t-btn"><span>🖼️</span>Photo<input type="file" id="u" style="display:none"></label>
+        <div class="t-btn" onclick="addT()"><span>✍️</span>Text</div>
+        <div class="t-btn" onclick="applyF('sepia')"><span>🍂</span>Sepia</div>
+        <div class="t-btn" onclick="applyF('grayscale')"><span>🌑</span>B&W</div>
+        <div class="t-btn" onclick="applyF('invert')"><span>🌈</span>Invert</div>
+        <div class="t-btn" onclick="cutOut()"><span>✂️</span>Cutout</div>
+    </div>
+
+    <div class="canvas-viewport">
+        <div class="canvas-wrap">
+            <canvas id="mainC"></canvas>
+        </div>
+    </div>
+
+<script>
+    const canvas = new fabric.Canvas('mainC', {
+        width: window.innerWidth - 40,
+        height: 450,
+        backgroundColor: '#fff'
+    });
+
+    document.getElementById('u').onchange = (e) => {
+        const r = new FileReader();
+        r.onload = (f) => {
+            fabric.Image.fromURL(f.target.result, (img) => {
+                img.scaleToWidth(canvas.width);
+                canvas.add(img);
+                canvas.setActiveObject(img);
+            });
+        };
+        r.readAsDataURL(e.target.files[0]);
+    };
+
+    function applyF(type) {
+        const obj = canvas.getActiveObject();
+        if(!obj) return alert("Select Photo First!");
+        if(type === 'grayscale') obj.filters.push(new fabric.Image.filters.Grayscale());
+        if(type === 'sepia') obj.filters.push(new fabric.Image.filters.Sepia());
+        if(type === 'invert') obj.filters.push(new fabric.Image.filters.Invert());
+        obj.applyFilters();
+        canvas.renderAll();
+    }
+
+    function cutOut() {
+        const obj = canvas.getActiveObject();
+        if(!obj) return alert("Select Photo to Cutout!");
+        obj.set('globalCompositeOperation', 'destination-in');
+        canvas.renderAll();
+        alert("AI Cutout applied! Use eraser to refine (Beta).");
+    }
+
+    function export4K() {
+        const dataURL = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 4 });
+        const link = document.createElement('a');
+        link.download = 'hooy_ultimate_4k.png';
+        link.href = dataURL;
+        link.click();
+    }
+</script>
+</body>
+</html>
+
